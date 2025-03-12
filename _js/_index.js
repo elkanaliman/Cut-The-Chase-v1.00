@@ -27,6 +27,12 @@ class Game {
             setTimeout(() => {
                 window.scrollTo(0, 1);
             }, 100);
+
+            // Lock to landscape orientation
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape')
+                    .catch((error) => console.log('Orientation lock failed:', error));
+            }
         });
         
         // Handle fullscreen changes
