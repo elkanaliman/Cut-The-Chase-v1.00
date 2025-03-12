@@ -21,6 +21,21 @@ class Game {
         this.onWindowResize = this.onWindowResize.bind(this);
         window.addEventListener('resize', this.onWindowResize);
         
+        // Hide address bar on mobile
+        window.addEventListener('load', () => {
+            // Set a timeout for iOS
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 100);
+        });
+        
+        // Handle fullscreen changes
+        document.addEventListener('click', () => {
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen();
+            }
+        });
+        
         this.animate();
     }
 
@@ -49,6 +64,12 @@ class Game {
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
+        
+        // Prevent looking below the ground and too close to the ground
+                // Prevent looking below the ground
+       
+        this.controls.minPolarAngle = Math.PI / 6; // 30 degrees above horizontal
+        this.controls.maxPolarAngle = Math.PI / 2.2; // π/2 radians = straight down
     }
 
    // Enhanced createGround method for the Game class
@@ -248,7 +269,7 @@ loadTiger() {
             this.mixer = new THREE.AnimationMixer(this.tigre);
             this.animations = gltf.animations;
             // Play the first animation
-            this.mixer.clipAction(this.animations[4]).play();
+            this.mixer.clipAction(this.animations[3]).play();
         }
         
     }, 
