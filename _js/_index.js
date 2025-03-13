@@ -3,8 +3,16 @@ import * as THREE from "https://cdn.skypack.dev/three@0.129.0/build/three.module
 import { OrbitControls } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "https://cdn.skypack.dev/three@0.129.0/examples/jsm/loaders/GLTFLoader.js";
 
+
 class Game {
     constructor() {
+        // Only keep animation properties we need
+        this.currentAnimation = null;
+        this.animationActions = {};
+        this.isRunning = false;  
+        this.isWalking = false;
+        this.isTiger = false;
+        
         this.container = document.getElementById('container3D');
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -19,7 +27,12 @@ class Game {
         
         this.animate = this.animate.bind(this);
         this.onWindowResize = this.onWindowResize.bind(this);
+        this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.handleKeyUp = this.handleKeyUp.bind(this);
+        
         window.addEventListener('resize', this.onWindowResize);
+        window.addEventListener('keydown', this.handleKeyDown);
+        window.addEventListener('keyup', this.handleKeyUp);
         
         // Hide address bar on mobile
         window.addEventListener('load', () => {
@@ -250,43 +263,43 @@ addTrees(count) {
 loadTiger() {
     const loader = new GLTFLoader();
     
-    // Load tiger model
     loader.load('_models/tiger/scene.gltf', (gltf) => {
         this.tigre = gltf.scene;
-    
-        // Position the tiger somewhere in your scene
         this.tigre.position.set(0, 0, 20);
-        
-        // You might need to scale the model depending on its original size
         this.tigre.scale.set(5, 5, 5);
-        this.tigre.rotation.set(0, 30, 0);
-
+        this.tigre.rotation.y = -Math.PI / 2; 
+        
         this.tigre.traverse((child) => {
             if (child.isMesh) {
-                child.geometry.computeVertexNormals(); // Recalculate normals
+                child.geometry.computeVertexNormals();
             }
         });
         
-        // Add the tiger to your scene
         this.scene.add(this.tigre);
         
-        // If the model has animations, you can set them up here
+        // Setup animations and show their names
         if (gltf.animations && gltf.animations.length) {
             this.mixer = new THREE.AnimationMixer(this.tigre);
-            this.animations = gltf.animations;
-            // Play the first animation
-            this.mixer.clipAction(this.animations[3]).play();
+            
+            // Get all animation names
+            const animationNames = gltf.animations.map(animation => animation.name).join(', ');
+            //window.alert('Available animations: ' + animationNames);
+            
+            // Store all available animations
+            gltf.animations.forEach((animation) => {
+                this.animationActions[animation.name] = this.mixer.clipAction(animation);
+            });
+
+            
         }
-        
+
+        this.playAnimation('Walk');
+        this.isTiger = true;
     }, 
-    // Progress callback
-    (xhr) => {
-    },
-    // Error callback
+    undefined,
     (error) => {
-        console.error('An error happened when loading the tiger model:', error);
+        //console.error('An error happened when loading the tiger model:', error);
     });
-    
 }
 
 
@@ -302,20 +315,71 @@ loadTiger() {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    animate() {
-        requestAnimationFrame(this.animate);
-        this.controls.update();
-        this.renderer.render(this.scene, this.camera);
-        if (this.mixer) {
-            this.mixer.update(0.016); // Update with approximate time delta (16ms)
+   
+
+
+    handleKeyDown(event) {
+        if (!this.isTiger) {
+            return;
+        }
+        
+        if (event.key.toLowerCase() === 'q') {
+            this.isRunning = true;
+            
+            //const walkAnimation = this.currentAnimation;
+             //const runAnimation = this.animationActions['Run'];
+            this.currentAnimation.crossFadeTo(this.animationActions['Run'], 2, true).play(); // Shortened crossfade time
+            //runAnimation;
+            
+            //this.currentAnimation = runAnimation;
+        }
+    }
+
+
+    handleKeyUp(event) {
+        if (event.key.toLowerCase() === 'q') {
+            
+            
+            this.currentAnimation.crossFadeTo(this.animationActions['Walk'], 2, true).play();
+            this.isRunning = false;
         }
     }
 
 
 
+    stopAnimation() {
+        if (this.currentAnimation) {
+            this.currentAnimation = null;
+        }
+    }
+
+ 
+
+    playAnimation(name) {
+        if (this.currentAnimation) {
+            this.currentAnimation.stop();
+        }
+        
+        if (this.animationActions[name]) {
+            this.currentAnimation = this.animationActions[name];
+            const thisAnimation = this.animationActions[name];
+            console.log('The current animation is', thisAnimation);
+            this.currentAnimation.play();
+        }
+    }
 
 
-
+    animate() {
+        requestAnimationFrame(this.animate);
+        
+        // Only update animations
+        if (this.mixer) {
+            this.mixer.update(0.016);
+        }
+        
+        this.controls.update();
+        this.renderer.render(this.scene, this.camera);
+    }
 }
 
 

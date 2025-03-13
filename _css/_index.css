@@ -16,28 +16,3 @@ body {
     height: 100%;
     background: #87CEEB; /* Sky blue background */
 }
-
-@media screen and (orientation: portrait) {
-    #orientation-message {
-        display: flex;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        font-size: 1.5em;
-        text-align: center;
-        padding: 20px;
-    }
-}
-
-@media screen and (orientation: landscape) {
-    #orientation-message {
-        display: none;
-    }
-}
